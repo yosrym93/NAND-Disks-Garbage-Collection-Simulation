@@ -1,0 +1,6 @@
+*conda_env*
+*venv*
+*__pycache__*
+*.txt
+*.idea*
+
