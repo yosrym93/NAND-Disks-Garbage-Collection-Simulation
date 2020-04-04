@@ -7,15 +7,19 @@ class GarbageCollector(ABC):
         self.erase_operations_count = 0
         self.copy_operations_count = 0
 
-    def run(self, current_psn):
-        victim_block = self.get_victim_block(current_psn)
-        if victim_block is not None:
+    def run(self, current_time):
+        if self.is_gc_needed():
+            victim_block = self.get_victim_block(current_time)
             self.reallocate_block(victim_block)
             self.physical_disk.erase_block(victim_block)
             self.erase_operations_count += 1
 
     @abstractmethod
-    def get_victim_block(self, current_psn):
+    def is_gc_needed(self):
+        pass
+
+    @abstractmethod
+    def get_victim_block(self, current_time):
         pass
 
     @abstractmethod

@@ -1,5 +1,4 @@
-from garbage_collectors.fagc_plus_garbage_collector import FaGCPlusGarbageCollector
-from garbage_collectors.x_garbage_collector import XGarbageCollector
+from garbage_collectors.greedy_garbage_collector import GreedyGarbageCollector
 from physical_disk.physical_disk import PhysicalDisk
 from logical_files.file import File
 import random
@@ -9,33 +8,35 @@ import matplotlib.pyplot as plt
 
 
 def run_simulation(physical_disk, garbage_collector, files_pages_counts, update_operations):
-    current_psn = 1
+    current_time = 1
     files = []
 
     # Create simulation files
     for pages_count in files_pages_counts:
-        files.append(File(pages_count, physical_disk, current_psn))
-        current_psn += 1
+        files.append(File(pages_count, physical_disk, current_time))
+        current_time += pages_count     # Each page is allocated in one time step
 
     # Run simulation updates and invoke the garbage collector
     update_times = []
     gc_times = []
     for idx, (file_index, page_index) in enumerate(update_operations):
-        print('Update operation: {0}, Scattering factor: {1}\r'.
-              format(idx, physical_disk.get_scattering_factor()), end='')
+        print('\rUpdate operation: {}'.format(idx), end='')
         start = time.time()
-        files[file_index].update_page(page_index, current_psn)
+        files[file_index].update_page(page_index, current_time)
         checkpoint = time.time()
-        garbage_collector.run(current_psn)
+        garbage_collector.run(current_time)
         end = time.time()
         update_times.append(checkpoint - start)
         gc_times.append(end - checkpoint)
-        current_psn += 1
+        current_time += 1
 
     print('')
-    # print(sum(update_times), sum(gc_times))
+    print('Simulation total updates time: {0}, total GC time: {1}'.format(sum(update_times), sum(gc_times)))
 
-    erase_counts = [block.erase_count for block in physical_disk.blocks]
+    erase_counts = [block.erase_count for block in physical_disk.used_blocks]
+    erase_counts.append(physical_disk.hot_active_block.erase_count)
+    if physical_disk.cold_active_block is not None:
+        erase_counts.append(physical_disk.cold_active_block.erase_count)
 
     statistics = {
         'Total erase operations': garbage_collector.erase_operations_count,
@@ -47,11 +48,8 @@ def run_simulation(physical_disk, garbage_collector, files_pages_counts, update_
 
 
 def main():
-    fagc_physical_disk = PhysicalDisk()
-    fagc_garbage_collector = FaGCPlusGarbageCollector(fagc_physical_disk)
-
-    # x_physical_disk = PhysicalDisk()
-    # x_garbage_collector = XGarbageCollector(x_physical_disk)
+    greedy_physical_disk = PhysicalDisk(is_cold_active_block=False)
+    greedy_garbage_collector = GreedyGarbageCollector(greedy_physical_disk)
 
     fig, (fagc_axis, x_axis) = plt.subplots(1, 2)
 
@@ -60,22 +58,15 @@ def main():
 
     update_operations = []
     for _ in range(update_operations_count):
+        updated_pages_count = random.randint(*updated_pages_range)
         file_index = random.randint(0, files_count-1)
-        page_index = random.randint(0, files_pages_counts[file_index]-1)
-        update_operations.append((file_index, page_index))
+        start_page_index = random.randint(0, files_pages_counts[file_index]-updated_pages_count)
+        for page_index in range(start_page_index, start_page_index + updated_pages_count):
+            update_operations.append((file_index, page_index))
 
-    try:
-        statistics, erase_counts = run_simulation(
-            fagc_physical_disk, fagc_garbage_collector, files_pages_counts, update_operations
-        )
-    except KeyError as e:
-        print('\nKey Error:')
-        print(e)
-        print('Scattering factor: {}'.format(fagc_physical_disk.get_scattering_factor()))
-        print('# Free blocks: {}'.format(len(fagc_physical_disk.free_blocks)))
-        print('# Free pages: {}'.format(fagc_physical_disk.free_pages_count))
-        print([block.free_pages_count for block in fagc_physical_disk.blocks])
-        exit()
+    statistics, erase_counts = run_simulation(
+        greedy_physical_disk, greedy_garbage_collector, files_pages_counts, update_operations
+    )
 
     for description, count in statistics.items():
         print(f'{description} : {count}')
