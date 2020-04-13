@@ -1,4 +1,5 @@
 from garbage_collectors.greedy_garbage_collector import GreedyGarbageCollector
+from garbage_collectors.fegc import FeGC
 from physical_disk.physical_disk import PhysicalDisk
 from logical_files.file import File
 import random
@@ -49,8 +50,9 @@ def run_simulation(physical_disk, garbage_collector, files_pages_counts, update_
 
 def main():
     greedy_physical_disk = PhysicalDisk(is_cold_active_block=False)
+    fegc_physical_disk = PhysicalDisk(is_cold_active_block=True, cold_block_assign_policy=1)
     greedy_garbage_collector = GreedyGarbageCollector(greedy_physical_disk)
-
+    fegc_garbage_collector = FeGC(fegc_physical_disk)
     fig, (fagc_axis, x_axis) = plt.subplots(1, 2)
 
     # Number of pages in each file
@@ -65,7 +67,7 @@ def main():
             update_operations.append((file_index, page_index))
 
     statistics, erase_counts = run_simulation(
-        greedy_physical_disk, greedy_garbage_collector, files_pages_counts, update_operations
+        fegc_physical_disk, fegc_garbage_collector, files_pages_counts, update_operations
     )
 
     for description, count in statistics.items():
