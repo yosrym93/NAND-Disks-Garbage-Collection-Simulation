@@ -23,4 +23,4 @@ class GreedyGarbageCollector(GarbageCollector):
         for page in victim_block.pages:
             if page.is_valid():
                 self.copy_operations_count += 1
-                self.physical_disk.reallocate_to_new_page(page.logical_page, current_time)
+                self.physical_disk.reallocate_to_new_page(page.logical_page)
