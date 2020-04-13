@@ -7,13 +7,18 @@ class PhysicalPage:
         self.block = physical_block
         self.state = self.FREE
         self.logical_page = None
+        self.time_invalid = None
+        self.piu = 0
+        self.last_update = 0
 
-    def invalidate(self):
+    def invalidate(self, current_time):
         self.state = self.INVALID
+        self.time_invalid = current_time
         self.block.invalid_pages_count += 1
 
-    def allocate(self, logical_page):
+    def allocate(self, logical_page, current_time):
         self.state = self.VALID
+        self.last_update = current_time
         self.logical_page = logical_page
 
     def free(self):

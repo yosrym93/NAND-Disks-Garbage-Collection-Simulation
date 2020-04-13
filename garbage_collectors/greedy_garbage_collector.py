@@ -19,8 +19,8 @@ class GreedyGarbageCollector(GarbageCollector):
 
         return max_invalid_pages_block
 
-    def reallocate_block(self, victim_block):
+    def reallocate_block(self, victim_block, current_time):
         for page in victim_block.pages:
             if page.is_valid():
                 self.copy_operations_count += 1
-                self.physical_disk.reallocate_to_new_page(page.logical_page)
+                self.physical_disk.reallocate_to_new_page(page.logical_page, current_time)
