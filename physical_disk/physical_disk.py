@@ -71,8 +71,6 @@ class PhysicalDisk:
 
     def erase_block(self, block):
         block.erase()
-        print('')
-        print('Free blocks count: {}'.format(len(self.free_blocks)))
 
         self.used_blocks.remove(block)
         self.free_blocks.add(block)
@@ -123,26 +121,26 @@ class PhysicalDisk:
         return average_updates, average_piu
 
     def get_min_migration_cost_block(self, current_time):
-        used_blocks_ages = [block.get_block_migration_cost(current_time, self.avg_erase_count, self.max_erase_count)
-                            for block in self.used_blocks]
+        migration_costs = [block.get_block_migration_cost(current_time, self.avg_erase_count, self.max_erase_count)
+                           for block in self.used_blocks]
 
-        cold_block_age = self.cold_active_block.get_block_migration_cost(current_time, self.avg_erase_count,
-                                                                         self.max_erase_count)
+        cold_block_migration_cost = self.cold_active_block.get_block_migration_cost(
+            current_time, self.avg_erase_count, self.max_erase_count
+        )
 
-        hot_block_age = self.hot_active_block.get_block_migration_cost(current_time, self.avg_erase_count,
-                                                                       self.max_erase_count)
+        hot_block_migration_cost = self.hot_active_block.get_block_migration_cost(
+            current_time, self.avg_erase_count, self.max_erase_count
+        )
 
-        max_used_block_age = max(used_blocks_ages)
-        if cold_block_age > hot_block_age and cold_block_age > max_used_block_age:
-            print('\nCold')
+        max_migration_cost = max(migration_costs)
+        if cold_block_migration_cost > hot_block_migration_cost and cold_block_migration_cost > max_migration_cost:
             min_migration_cost_block = self.cold_active_block
             self.assign_new_cold_active_block(current_time)
-        elif hot_block_age > max_used_block_age:
-            print('\nHot')
+        elif hot_block_migration_cost > max_migration_cost:
             min_migration_cost_block = self.hot_active_block
             self.assign_new_hot_active_block(current_time)
         else:
-            index = used_blocks_ages.index(max(used_blocks_ages))
+            index = migration_costs.index(max(migration_costs))
             min_migration_cost_block = self.used_blocks[index]
 
         return min_migration_cost_block

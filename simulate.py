@@ -58,7 +58,7 @@ def main():
     mcsgc_garbage_collector = MCSGCGarbageCollector(mcsgc_physical_disk)
 
     simulation_disks_and_gcs = [
-        # ('Greedy GC', greedy_physical_disk, greedy_garbage_collector),
+        ('Greedy GC', greedy_physical_disk, greedy_garbage_collector),
         ('MCSGC', mcsgc_physical_disk, mcsgc_garbage_collector)
     ]
 
@@ -68,17 +68,16 @@ def main():
     if len(simulation_disks_and_gcs) == 1:
         axes = [axes]
 
-
     # Number of pages in each file
     files_pages_counts = [random.randint(*file_pages_count_range) for _ in range(files_count)]
 
     update_operations = []
     for _ in range(update_operations_count):
         updated_pages_count = random.randint(*updated_pages_range)
-        if uniform_updates:
-            file_index = random.randint(0, files_count-1)
+        if localized_updates:
+            file_index = int(random.gauss(files_count / 2, files_count / 10))
         else:
-            file_index = int(random.gauss(files_count / 2, files_count/10))
+            file_index = random.randint(0, files_count - 1)
         start_page_index = random.randint(0, files_pages_counts[file_index]-updated_pages_count)
         for page_index in range(start_page_index, start_page_index + updated_pages_count):
             update_operations.append((file_index, page_index))
@@ -93,8 +92,8 @@ def main():
             print(f'{description} : {count}')
 
         index = range(len(erase_counts))
-        axis.scatter(index, erase_counts, c='b', label='FaGC')
-        axis.set_ylim(bottom=0, top=50)
+        axis.scatter(index, erase_counts, c='b')
+        axis.set_ylim(bottom=0, top=100)
         axis.set_title(title)
 
     plt.show()

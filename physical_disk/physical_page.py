@@ -16,6 +16,7 @@ class PhysicalPage:
         self.state = self.INVALID
         self.time_invalid = current_time
         self.block.invalid_pages_count += 1
+        self.block.valid_pages_count -= 1
 
     def allocate(self, logical_page, current_time):
         self.state = self.VALID
@@ -31,9 +32,9 @@ class PhysicalPage:
         return self.state == self.VALID
 
     def get_update_frequency_time(self, current_time):
-        if(self.logical_page.update_count > 0):
+        if self.logical_page.update_count > 0:
             self.update_frequency_time = (current_time - self.logical_page.allocation_time)\
-                                         /self.logical_page.update_count
+                                         / self.logical_page.update_count
         else:
             self.update_frequency_time = (current_time - self.logical_page.allocation_time)
         return self.update_frequency_time
