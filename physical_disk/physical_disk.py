@@ -29,7 +29,7 @@ class PhysicalDisk:
         self.hot_active_block = PhysicalBlock()
         if is_cold_active_block:
             self.cold_active_block = PhysicalBlock()
-            self.hot_active_block.allocation_time = 1
+            self.cold_active_block.allocation_time = 1
         else:
             self.cold_active_block = None
         self.hot_active_block.allocation_time = 1

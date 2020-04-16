@@ -4,7 +4,7 @@ from config import *
 
 class AdaptiveFileWareGarbageCollector(GarbageCollector):
     threshold = 2
-    empirical_constant = 3
+    empirical_constant = 0.5
 
     def __init__(self, physical_disk):
         super().__init__(physical_disk)
@@ -14,16 +14,16 @@ class AdaptiveFileWareGarbageCollector(GarbageCollector):
 
     def get_victim_block(self, current_time):
         level_invalidate_page_list = [[] for _ in range(pages_per_block + 1)]
-        erase_count_threshold = self.physical_disk.min_erase_count * self.empirical_constant * \
-                                (self.physical_disk.min_erase_count + self.physical_disk.max_erase_count)
+        erase_count_threshold = self.physical_disk.min_erase_count + self.empirical_constant * \
+                                (self.physical_disk.min_erase_count - self.physical_disk.max_erase_count)
         victim_block = None
         more_stable_block_flag = False
         for block in self.physical_disk.used_blocks:
-            stability = current_time - 0  # entery time ??????????????
+            stability = block.get_block_age(current_time)
             victim_score = block.erase_count * stability
             level_invalidate_page_list[pages_per_block - block.invalid_pages_count].append((block, victim_score))
-        for level in level_invalidate_page_list:
-            sorted(level, key=lambda x: -x[1])
+        for idx, level in enumerate(level_invalidate_page_list):
+            level_invalidate_page_list[idx] = sorted(level, key=lambda x: -x[1])
         if len(level_invalidate_page_list[0]) > 1 and (level_invalidate_page_list[0][0][1]
                                                        < erase_count_threshold or erase_count_threshold == 0):
             victim_block = level_invalidate_page_list[0][0][0]

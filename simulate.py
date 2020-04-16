@@ -54,14 +54,16 @@ def main():
     greedy_physical_disk = PhysicalDisk(is_cold_active_block=False)
     # fegc_physical_disk = PhysicalDisk(is_cold_active_block=True, cold_block_assign_policy=1)
     mcsgc_physical_disk = PhysicalDisk(is_cold_active_block=True, cold_block_assign_policy=0)
+    adaptive_physical_disk = PhysicalDisk(is_cold_active_block=True)
 
     greedy_garbage_collector = GreedyGarbageCollector(greedy_physical_disk)
     # fegc_garbage_collector = FeGC(fegc_physical_disk)
     mcsgc_garbage_collector = MCSGCGarbageCollector(mcsgc_physical_disk)
+    adaptive_garbage_collector = AdaptiveFileWareGarbageCollector(adaptive_physical_disk)
 
     simulation_disks_and_gcs = [
-        ('Greedy GC', greedy_physical_disk, greedy_garbage_collector),
-        ('MCSGC', mcsgc_physical_disk, mcsgc_garbage_collector)
+        # ('Greedy GC', greedy_physical_disk, greedy_garbage_collector),
+        ('Adaptive GC', adaptive_physical_disk, adaptive_garbage_collector)
     ]
 
     fig, axes = plt.subplots(1, len(simulation_disks_and_gcs))
@@ -95,7 +97,7 @@ def main():
 
         index = range(len(erase_counts))
         axis.scatter(index, erase_counts, c='b')
-        axis.set_ylim(bottom=0, top=100)
+        axis.set_ylim(bottom=0, top=80)
         axis.set_title(title)
 
     plt.show()
