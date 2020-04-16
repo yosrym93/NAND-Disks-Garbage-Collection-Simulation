@@ -12,13 +12,15 @@ class PhysicalPage:
         self.last_update = 0
         self.update_frequency_time = 0
 
-    def invalidate(self):
+    def invalidate(self, current_time):
         self.state = self.INVALID
+        self.time_invalid = current_time
         self.block.invalid_pages_count += 1
         self.block.valid_pages_count -= 1
 
-    def allocate(self, logical_page):
+    def allocate(self, logical_page, current_time):
         self.state = self.VALID
+        self.last_update = current_time
         self.logical_page = logical_page
         self.block.valid_pages_count += 1
 

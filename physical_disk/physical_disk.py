@@ -51,9 +51,9 @@ class PhysicalDisk:
 
         current_physical_page = logical_page.physical_page
         if current_physical_page is not None:
-            current_physical_page.invalidate()
+            current_physical_page.invalidate(current_time)
 
-        free_physical_page.allocate(logical_page)
+        free_physical_page.allocate(logical_page, current_time)
         logical_page.set_physical_page(free_physical_page)
 
     def assign_new_cold_active_block(self, current_time):
