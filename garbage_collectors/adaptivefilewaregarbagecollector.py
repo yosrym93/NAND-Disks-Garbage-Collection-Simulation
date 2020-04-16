@@ -42,13 +42,13 @@ class AdaptiveFileWareGarbageCollector(GarbageCollector):
                         break
         if not more_stable_block_flag:
             for level in level_invalidate_page_list:
-                if len(level) != 0 and not more_stable_block_flag:
+                if more_stable_block_flag:
+                    break
+                if len(level) > 0:
                     for block, victim_score in level:
                         victim_block = block
                         more_stable_block_flag = True
                         break
-                else:
-                    break
 
         return victim_block
 
