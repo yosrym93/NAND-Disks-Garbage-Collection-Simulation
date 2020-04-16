@@ -60,7 +60,7 @@ class AdaptiveFileWareGarbageCollector(GarbageCollector):
         for page in victim_block.pages:
             if page.is_valid():
                 valid_pages_hotness_in_block.append((page,
-                                                     (page.logical_page.update_counter /
+                                                     (page.logical_page.update_count /
                                                       (current_time - page.logical_page.allocation_time)) *
                                                      (current_time - page.logical_page.last_update_time)))
         if len(valid_pages_hotness_in_block) != 0:
@@ -69,7 +69,7 @@ class AdaptiveFileWareGarbageCollector(GarbageCollector):
             hotness_threshold = 0
         for page, hotness in valid_pages_hotness_in_block:
             if hotness >= hotness_threshold:
-                self.physical_disk.reallocate_to_new_page(page.logical_page)
+                self.physical_disk.reallocate_to_new_page(page.logical_page, current_time)
             else:
-                self.physical_disk.reallocate_to_new_page(page.logical_page, True)
+                self.physical_disk.reallocate_to_new_page(page.logical_page, current_time, is_cold=True)
             self.copy_operations_count += 1

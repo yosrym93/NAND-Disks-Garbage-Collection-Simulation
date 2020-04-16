@@ -1,5 +1,7 @@
 from garbage_collectors.adaptivefilewaregarbagecollector import AdaptiveFileWareGarbageCollector
 from garbage_collectors.greedy_garbage_collector import GreedyGarbageCollector
+from garbage_collectors.fegc import FeGC
+from garbage_collectors.mcsgc_garbage_collector import MCSGCGarbageCollector
 from physical_disk.physical_disk import PhysicalDisk
 from logical_files.file import File
 import random
@@ -49,13 +51,24 @@ def run_simulation(physical_disk, garbage_collector, files_pages_counts, update_
 
 
 def main():
-    """greedy_physical_disk = PhysicalDisk(is_cold_active_block=False)
-    greedy_garbage_collector = GreedyGarbageCollector(greedy_physical_disk)"""
+    greedy_physical_disk = PhysicalDisk(is_cold_active_block=False)
+    # fegc_physical_disk = PhysicalDisk(is_cold_active_block=True, cold_block_assign_policy=1)
+    mcsgc_physical_disk = PhysicalDisk(is_cold_active_block=True, cold_block_assign_policy=1)
 
-    adaptive_fileware_disk = PhysicalDisk(is_cold_active_block=True)
-    adaptive_fileware_garbage_collector=AdaptiveFileWareGarbageCollector(adaptive_fileware_disk)
+    greedy_garbage_collector = GreedyGarbageCollector(greedy_physical_disk)
+    # fegc_garbage_collector = FeGC(fegc_physical_disk)
+    mcsgc_garbage_collector = MCSGCGarbageCollector(mcsgc_physical_disk)
 
-    fig, (fagc_axis, x_axis) = plt.subplots(1, 2)
+    simulation_disks_and_gcs = [
+        ('Greedy GC', greedy_physical_disk, greedy_garbage_collector),
+        ('MCSGC', mcsgc_physical_disk, mcsgc_garbage_collector)
+    ]
+
+    fig, axes = plt.subplots(1, len(simulation_disks_and_gcs))
+
+    # Ensure axes is a list (iterable)
+    if len(simulation_disks_and_gcs) == 1:
+        axes = [axes]
 
     # Number of pages in each file
     files_pages_counts = [random.randint(*file_pages_count_range) for _ in range(files_count)]
@@ -63,24 +76,28 @@ def main():
     update_operations = []
     for _ in range(update_operations_count):
         updated_pages_count = random.randint(*updated_pages_range)
-        file_index = random.randint(0, files_count-1)
+        if localized_updates:
+            file_index = int(random.gauss(files_count / 2, files_count / 10))
+        else:
+            file_index = random.randint(0, files_count - 1)
         start_page_index = random.randint(0, files_pages_counts[file_index]-updated_pages_count)
         for page_index in range(start_page_index, start_page_index + updated_pages_count):
             update_operations.append((file_index, page_index))
 
-    statistics, erase_counts = run_simulation(
-        adaptive_fileware_disk, adaptive_fileware_garbage_collector, files_pages_counts, update_operations
-    )
+    for axis, simulation_disk_and_GC in zip(axes, simulation_disks_and_gcs):
+        title, physical_disk, garbage_collector = simulation_disk_and_GC
+        print(title)
+        statistics, erase_counts = run_simulation(
+            physical_disk, garbage_collector, files_pages_counts, update_operations
+        )
+        for description, count in statistics.items():
+            print(f'{description} : {count}')
 
-    for description, count in statistics.items():
-        print(f'{description} : {count}')
+        index = range(len(erase_counts))
+        axis.scatter(index, erase_counts, c='b')
+        axis.set_ylim(bottom=0, top=100)
+        axis.set_title(title)
 
-    index = range(len(erase_counts))
-
-    fagc_axis.scatter(index, erase_counts, c='b', label='FaGC')
-    fagc_axis.set_ylim(bottom=0, top=500)
-
-    # Plot
     plt.show()
 
 

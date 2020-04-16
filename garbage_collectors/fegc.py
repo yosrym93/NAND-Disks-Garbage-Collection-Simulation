@@ -8,9 +8,9 @@ class FeGC(GarbageCollector):
         self.average_piu = 0
 
     def run(self, current_time):
-        super().run(current_time)
         if self.is_gc_needed():
             self.average_updates, self.average_piu = self.physical_disk.calculate_stats()
+        super().run(current_time)
 
     def is_gc_needed(self):
         return len(self.physical_disk.free_blocks) < 2
