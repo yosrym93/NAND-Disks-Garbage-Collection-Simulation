@@ -10,6 +10,7 @@ class PhysicalPage:
         self.time_invalid = None
         self.piu = 0
         self.last_update = 0
+        self.update_frequency_time = 0
 
     def invalidate(self, current_time):
         self.state = self.INVALID
@@ -20,6 +21,7 @@ class PhysicalPage:
         self.state = self.VALID
         self.last_update = current_time
         self.logical_page = logical_page
+        self.block.valid_pages_count += 1
 
     def free(self):
         self.state = self.FREE
@@ -27,3 +29,13 @@ class PhysicalPage:
 
     def is_valid(self):
         return self.state == self.VALID
+
+    def get_update_frequency_time(self, current_time):
+        if(self.logical_page.update_count > 0):
+            self.update_frequency_time = (current_time - self.logical_page.allocation_time)\
+                                         /self.logical_page.update_count
+        else:
+            self.update_frequency_time = (current_time - self.logical_page.allocation_time)
+        return self.update_frequency_time
+
+
