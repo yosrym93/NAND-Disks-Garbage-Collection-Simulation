@@ -17,7 +17,6 @@ class AdaptiveFileWareGarbageCollector(GarbageCollector):
         erase_count_threshold = self.physical_disk.min_erase_count + self.empirical_constant * \
                                 (self.physical_disk.max_erase_count - self.physical_disk.min_erase_count)
         victim_block = None
-        more_stable_block_flag = False
         for block in self.physical_disk.used_blocks:
             if block.erase_count > erase_count_threshold:
                 continue
@@ -46,32 +45,9 @@ class AdaptiveFileWareGarbageCollector(GarbageCollector):
         if victim_block is None:
             victim_block = criteria_block
 
-        # if len(level_invalidate_page_list[0]) > 1:
-        #     victim_block = level_invalidate_page_list[0][0][0]
-        #     more_stable_block_flag = True
-        # elif len(level_invalidate_page_list[0]) == 1:
-        #     for level in range(1, len(level_invalidate_page_list)):
-        #         if len(level_invalidate_page_list[level]) != 0:
-        #             if level_invalidate_page_list[0][0][1] < \
-        #                     level_invalidate_page_list[level][0][1] < erase_count_threshold or (
-        #                     erase_count_threshold == 0):
-        #                 victim_block = level_invalidate_page_list[level][0][0]
-        #                 more_stable_block_flag = True
-        #                 break
-        # if not more_stable_block_flag:
-        #     for idx, level in enumerate(level_invalidate_page_list):
-        #         if more_stable_block_flag:
-        #             break
-        #         if len(level) > 0:
-        #             for block, victim_score in level:
-        #                 victim_block = block
-        #                 more_stable_block_flag = True
-        #                 break
-
         return victim_block
 
     def reallocate_block(self, victim_block, current_time):
-        hotness_threshold = 0
         valid_pages_hotness_in_block = []
         for page in victim_block.pages:
             if page.is_valid():

@@ -62,9 +62,9 @@ def main():
     adaptive_garbage_collector = AdaptiveFileWareGarbageCollector(adaptive_physical_disk)
 
     simulation_disks_and_gcs = [
+        ('Adaptive GC', adaptive_physical_disk, adaptive_garbage_collector),
         ('Greedy GC', greedy_physical_disk, greedy_garbage_collector),
-        #('MCSGC', mcsgc_physical_disk, mcsgc_garbage_collector),
-        ('Adaptive GC', adaptive_physical_disk, adaptive_garbage_collector)
+        ('MCSGC', mcsgc_physical_disk, mcsgc_garbage_collector)
     ]
 
     fig, axes = plt.subplots(1, len(simulation_disks_and_gcs))
@@ -98,8 +98,8 @@ def main():
             print(f'{description} : {count}')
 
         index = range(len(erase_counts))
-        axis.scatter(index, erase_counts, c='b')
-        axis.set_ylim(bottom=0, top=30)
+        axis.scatter(index, erase_counts, c='b', s=5)
+        axis.set_ylim(bottom=0, top=50)
         axis.set_title(title)
 
     plt.show()

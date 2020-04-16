@@ -140,7 +140,7 @@ class PhysicalDisk:
             min_migration_cost_block = self.hot_active_block
             self.assign_new_hot_active_block(current_time)
         else:
-            index = migration_costs.index(max(migration_costs))
+            index = migration_costs.index(max_migration_cost)
             min_migration_cost_block = self.used_blocks[index]
 
         return min_migration_cost_block

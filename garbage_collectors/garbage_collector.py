@@ -14,7 +14,6 @@ class GarbageCollector(ABC):
             self.physical_disk.erase_block(victim_block)
             self.erase_operations_count += 1
 
-
     @abstractmethod
     def is_gc_needed(self):
         pass
