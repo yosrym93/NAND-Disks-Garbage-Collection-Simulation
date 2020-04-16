@@ -24,6 +24,7 @@ class PhysicalBlock:
         return self.next_free_page_index >= pages_per_block
 
     def erase(self):
+        self.allocation_time = 0
         self.invalid_pages_count = 0
         self.valid_pages_count = 0
         self.next_free_page_index = 0
@@ -44,7 +45,7 @@ class PhysicalBlock:
 
     def get_block_migration_cost(self, current_time, avg_erase_count , max_erase_count):
         valid_pages_percentage = self.valid_pages_count / pages_per_block
-        if(max_erase_count > 0):
+        if max_erase_count > 0:
             block_age = self.get_block_age(current_time) * (1 - valid_pages_percentage)\
                         /pow(1 + valid_pages_percentage, 2 - avg_erase_count / max_erase_count)
         else:

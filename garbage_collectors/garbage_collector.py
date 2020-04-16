@@ -11,7 +11,7 @@ class GarbageCollector(ABC):
         if self.is_gc_needed():
             victim_block = self.get_victim_block(current_time)
             self.reallocate_block(victim_block, current_time)
-            self.physical_disk.erase_block(victim_block)
+            self.physical_disk.erase_block(victim_block, current_time)
             self.erase_operations_count += 1
 
     @abstractmethod

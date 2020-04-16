@@ -71,22 +71,11 @@ class PhysicalDisk:
 
     def erase_block(self, block):
         block.erase()
-        block.allocation_time = 0
-        self.free_blocks.add(block)
+        print('')
+        print('Free blocks count: {}'.format(len(self.free_blocks)))
 
-        if(block == self.hot_active_block):
-            if(len(self.free_blocks) == 1):
-                return
-            self.hot_active_block = self.free_blocks.pop(0)
-        elif(block == self.cold_active_block):
-            if(len(self.free_blocks) == 1):
-                return
-            if self.cold_block_assign_policy == PhysicalDisk.COLD_BLOCK_ASSIGN_MIN_ERASE:
-                self.cold_active_block = self.free_blocks.pop(0)
-            else:
-                self.cold_active_block = self.free_blocks.pop(index=len(self.free_blocks) // 2)
-        else:
-            self.used_blocks.remove(block)
+        self.used_blocks.remove(block)
+        self.free_blocks.add(block)
 
         self.erase_counts[block.erase_count - 1] -= 1
         if block.erase_count in self.erase_counts:
@@ -134,19 +123,29 @@ class PhysicalDisk:
         return average_updates, average_piu
 
     def get_min_migration_cost_block(self, current_time):
-        blocks_age = [block.get_block_migration_cost(current_time, self.avg_erase_count , self.max_erase_count)
-                      for block in self.used_blocks]
-        # blocks_age.append(self.cold_active_block.get_block_migration_cost(current_time, self.avg_erase_count ,
-        #                                                                   self.max_erase_count))
-        # blocks_age.append(self.hot_active_block.get_block_migration_cost(current_time, self.avg_erase_count ,
-        #                                                                  self.max_erase_count))
+        used_blocks_ages = [block.get_block_migration_cost(current_time, self.avg_erase_count, self.max_erase_count)
+                            for block in self.used_blocks]
 
-        index = blocks_age.index(max(blocks_age))
-        # if(index == len(self.used_blocks)):
-        #     return self.cold_active_block
-        # elif (index == len(self.used_blocks) + 1):
-        #     return self.hot_active_block
-        return self.used_blocks[index]
+        cold_block_age = self.cold_active_block.get_block_migration_cost(current_time, self.avg_erase_count,
+                                                                         self.max_erase_count)
+
+        hot_block_age = self.hot_active_block.get_block_migration_cost(current_time, self.avg_erase_count,
+                                                                       self.max_erase_count)
+
+        max_used_block_age = max(used_blocks_ages)
+        if cold_block_age > hot_block_age and cold_block_age > max_used_block_age:
+            print('\nCold')
+            min_migration_cost_block = self.cold_active_block
+            self.assign_new_cold_active_block(current_time)
+        elif hot_block_age > max_used_block_age:
+            print('\nHot')
+            min_migration_cost_block = self.hot_active_block
+            self.assign_new_hot_active_block(current_time)
+        else:
+            index = used_blocks_ages.index(max(used_blocks_ages))
+            min_migration_cost_block = self.used_blocks[index]
+
+        return min_migration_cost_block
 
     def get_average_update_frequency_time(self, current_time):
         average_update_frequency_time = 0
@@ -156,6 +155,3 @@ class PhysicalDisk:
         average_update_frequency_time += current_time - self.cold_active_block.allocation_time
         average_update_frequency_time /= (len(self.used_blocks) + 2)
         return average_update_frequency_time
-
-
-

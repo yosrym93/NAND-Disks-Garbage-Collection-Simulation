@@ -51,12 +51,23 @@ def run_simulation(physical_disk, garbage_collector, files_pages_counts, update_
 
 def main():
     greedy_physical_disk = PhysicalDisk(is_cold_active_block=False)
-    fegc_physical_disk = PhysicalDisk(is_cold_active_block=True, cold_block_assign_policy=1)
+    # fegc_physical_disk = PhysicalDisk(is_cold_active_block=True, cold_block_assign_policy=1)
     mcsgc_physical_disk = PhysicalDisk(is_cold_active_block=True, cold_block_assign_policy=1)
     greedy_garbage_collector = GreedyGarbageCollector(greedy_physical_disk)
-    fegc_garbage_collector = FeGC(fegc_physical_disk)
+    # fegc_garbage_collector = FeGC(fegc_physical_disk)
     mcsgc_garbage_collector = MCSGCGarbageCollector(mcsgc_physical_disk)
-    fig, (fagc_axis, x_axis) = plt.subplots(1, 2)
+
+    simulation_disks_and_gcs = [
+        # ('Greedy GC', greedy_physical_disk, greedy_garbage_collector),
+        ('MCSGC', mcsgc_physical_disk, mcsgc_garbage_collector)
+    ]
+
+    fig, axes = plt.subplots(1, len(simulation_disks_and_gcs))
+
+    # Ensure axes is a list (iterable)
+    if len(simulation_disks_and_gcs) == 1:
+        axes = [axes]
+
 
     # Number of pages in each file
     files_pages_counts = [random.randint(*file_pages_count_range) for _ in range(files_count)]
@@ -64,25 +75,28 @@ def main():
     update_operations = []
     for _ in range(update_operations_count):
         updated_pages_count = random.randint(*updated_pages_range)
-        file_index = random.randint(0, files_count-1)
+        if uniform_updates:
+            file_index = random.randint(0, files_count-1)
+        else:
+            file_index = int(random.gauss(files_count / 2, files_count/10))
         start_page_index = random.randint(0, files_pages_counts[file_index]-updated_pages_count)
         for page_index in range(start_page_index, start_page_index + updated_pages_count):
             update_operations.append((file_index, page_index))
 
-    statistics, erase_counts = run_simulation(
-        mcsgc_physical_disk, mcsgc_garbage_collector, files_pages_counts, update_operations
-    )
+    for axis, simulation_disk_and_GC in zip(axes, simulation_disks_and_gcs):
+        title, physical_disk, garbage_collector = simulation_disk_and_GC
+        print(title)
+        statistics, erase_counts = run_simulation(
+            physical_disk, garbage_collector, files_pages_counts, update_operations
+        )
+        for description, count in statistics.items():
+            print(f'{description} : {count}')
 
+        index = range(len(erase_counts))
+        axis.scatter(index, erase_counts, c='b', label='FaGC')
+        axis.set_ylim(bottom=0, top=50)
+        axis.set_title(title)
 
-    for description, count in statistics.items():
-        print(f'{description} : {count}')
-
-    index = range(len(erase_counts))
-
-    fagc_axis.scatter(index, erase_counts, c='b', label='FaGC')
-    fagc_axis.set_ylim(bottom=0, top=200)
-
-    # Plot
     plt.show()
 
 
