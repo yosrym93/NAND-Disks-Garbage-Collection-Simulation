@@ -19,13 +19,16 @@ class AdaptiveFileWareGarbageCollector(GarbageCollector):
         victim_block = None
         more_stable_block_flag = False
         for block in self.physical_disk.used_blocks:
+            if block.erase_count > erase_count_threshold:
+                continue
+            print('hi')
             stability = block.get_block_age(current_time)
-            victim_score = block.erase_count * stability
+            victim_score = (block.erase_count + 1) * stability
             level_invalidate_page_list[pages_per_block - block.invalid_pages_count].append((block, victim_score))
+
         for idx, level in enumerate(level_invalidate_page_list):
             level_invalidate_page_list[idx] = sorted(level, key=lambda x: -x[1])
-        if len(level_invalidate_page_list[0]) > 1 and (level_invalidate_page_list[0][0][1]
-                                                       < erase_count_threshold or erase_count_threshold == 0):
+        if len(level_invalidate_page_list[0]) > 1:
             victim_block = level_invalidate_page_list[0][0][0]
             more_stable_block_flag = True
         elif len(level_invalidate_page_list[0]) == 1:
@@ -41,10 +44,9 @@ class AdaptiveFileWareGarbageCollector(GarbageCollector):
             for level in level_invalidate_page_list:
                 if len(level) != 0:
                     for block, victim_score in level:
-                        if victim_score < erase_count_threshold:
-                            victim_block = block
-                            more_stable_block_flag = True
-                            break
+                        victim_block = block
+                        more_stable_block_flag = True
+                        break
         if not more_stable_block_flag:
             for level in level_invalidate_page_list:
                 if len(level) != 0:
