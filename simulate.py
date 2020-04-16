@@ -54,7 +54,7 @@ def main():
     greedy_physical_disk = PhysicalDisk(is_cold_active_block=False)
     # fegc_physical_disk = PhysicalDisk(is_cold_active_block=True, cold_block_assign_policy=1)
     mcsgc_physical_disk = PhysicalDisk(is_cold_active_block=True, cold_block_assign_policy=0)
-    adaptive_physical_disk = PhysicalDisk(is_cold_active_block=True)
+    adaptive_physical_disk = PhysicalDisk(is_cold_active_block=True, cold_block_assign_policy=1)
 
     greedy_garbage_collector = GreedyGarbageCollector(greedy_physical_disk)
     # fegc_garbage_collector = FeGC(fegc_physical_disk)
@@ -62,7 +62,8 @@ def main():
     adaptive_garbage_collector = AdaptiveFileWareGarbageCollector(adaptive_physical_disk)
 
     simulation_disks_and_gcs = [
-        # ('Greedy GC', greedy_physical_disk, greedy_garbage_collector),
+        ('Greedy GC', greedy_physical_disk, greedy_garbage_collector),
+        #('MCSGC', mcsgc_physical_disk, mcsgc_garbage_collector),
         ('Adaptive GC', adaptive_physical_disk, adaptive_garbage_collector)
     ]
 
@@ -77,11 +78,12 @@ def main():
 
     update_operations = []
     for _ in range(update_operations_count):
-        updated_pages_count = random.randint(*updated_pages_range)
         if localized_updates:
             file_index = int(random.gauss(files_count / 2, files_count / 10))
         else:
             file_index = random.randint(0, files_count - 1)
+        updated_pages_count = random.randint(updated_pages_range[0],
+                                             min(updated_pages_range[0], files_pages_counts[file_index]))
         start_page_index = random.randint(0, files_pages_counts[file_index]-updated_pages_count)
         for page_index in range(start_page_index, start_page_index + updated_pages_count):
             update_operations.append((file_index, page_index))
@@ -97,7 +99,7 @@ def main():
 
         index = range(len(erase_counts))
         axis.scatter(index, erase_counts, c='b')
-        axis.set_ylim(bottom=0, top=80)
+        axis.set_ylim(bottom=0, top=30)
         axis.set_title(title)
 
     plt.show()

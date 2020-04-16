@@ -15,40 +15,58 @@ class AdaptiveFileWareGarbageCollector(GarbageCollector):
     def get_victim_block(self, current_time):
         level_invalidate_page_list = [[] for _ in range(pages_per_block + 1)]
         erase_count_threshold = self.physical_disk.min_erase_count + self.empirical_constant * \
-                                (self.physical_disk.min_erase_count - self.physical_disk.max_erase_count)
+                                (self.physical_disk.max_erase_count - self.physical_disk.min_erase_count)
         victim_block = None
         more_stable_block_flag = False
         for block in self.physical_disk.used_blocks:
             if block.erase_count > erase_count_threshold:
                 continue
             stability = block.get_block_age(current_time)
-            victim_score = (block.erase_count + 1) * stability
+            victim_score = stability / (block.erase_count + 1)
             level_invalidate_page_list[pages_per_block - block.invalid_pages_count].append((block, victim_score))
 
         for idx, level in enumerate(level_invalidate_page_list):
             level_invalidate_page_list[idx] = sorted(level, key=lambda x: -x[1])
 
-        if len(level_invalidate_page_list[0]) > 1:
-            victim_block = level_invalidate_page_list[0][0][0]
-            more_stable_block_flag = True
-        elif len(level_invalidate_page_list[0]) == 1:
-            for level in range(1, len(level_invalidate_page_list)):
-                if len(level_invalidate_page_list[level]) != 0:
-                    if level_invalidate_page_list[0][0][1] < \
-                            level_invalidate_page_list[level][0][1] < erase_count_threshold or (
-                            erase_count_threshold == 0):
-                        victim_block = level_invalidate_page_list[level][0][0]
-                        more_stable_block_flag = True
-                        break
-        if not more_stable_block_flag:
-            for level in level_invalidate_page_list:
-                if more_stable_block_flag:
-                    break
-                if len(level) > 0:
-                    for block, victim_score in level:
+        criteria_block = None
+        criteria_score = 0
+        for level in level_invalidate_page_list:
+            if victim_block is not None:
+                break
+            if len(level) > 1:
+                for block, victim_score in level:
+                    if victim_score > criteria_score:
                         victim_block = block
-                        more_stable_block_flag = True
                         break
+            elif len(level) == 1:
+                if criteria_score == 0:
+                    criteria_block = level[0][0]
+                    criteria_score = level[0][1]
+
+        if victim_block is None:
+            victim_block = criteria_block
+
+        # if len(level_invalidate_page_list[0]) > 1:
+        #     victim_block = level_invalidate_page_list[0][0][0]
+        #     more_stable_block_flag = True
+        # elif len(level_invalidate_page_list[0]) == 1:
+        #     for level in range(1, len(level_invalidate_page_list)):
+        #         if len(level_invalidate_page_list[level]) != 0:
+        #             if level_invalidate_page_list[0][0][1] < \
+        #                     level_invalidate_page_list[level][0][1] < erase_count_threshold or (
+        #                     erase_count_threshold == 0):
+        #                 victim_block = level_invalidate_page_list[level][0][0]
+        #                 more_stable_block_flag = True
+        #                 break
+        # if not more_stable_block_flag:
+        #     for idx, level in enumerate(level_invalidate_page_list):
+        #         if more_stable_block_flag:
+        #             break
+        #         if len(level) > 0:
+        #             for block, victim_score in level:
+        #                 victim_block = block
+        #                 more_stable_block_flag = True
+        #                 break
 
         return victim_block
 
