@@ -53,7 +53,7 @@ def run_simulation(physical_disk, garbage_collector, files_pages_counts, update_
 def main():
     greedy_physical_disk = PhysicalDisk(is_cold_active_block=False)
     # fegc_physical_disk = PhysicalDisk(is_cold_active_block=True, cold_block_assign_policy=1)
-    mcsgc_physical_disk = PhysicalDisk(is_cold_active_block=True, cold_block_assign_policy=1)
+    mcsgc_physical_disk = PhysicalDisk(is_cold_active_block=True, cold_block_assign_policy=0)
 
     greedy_garbage_collector = GreedyGarbageCollector(greedy_physical_disk)
     # fegc_garbage_collector = FeGC(fegc_physical_disk)
