@@ -55,7 +55,7 @@ class PhysicalDisk:
         logical_page.set_physical_page(free_physical_page)
 
     def assign_new_cold_active_block(self):
-        self.used_blocks.add(self.cold_active_block)
+        self.used_blocks.append(self.cold_active_block)
         if self.cold_block_assign_policy == PhysicalDisk.COLD_BLOCK_ASSIGN_MIN_ERASE:
             self.cold_active_block = self.free_blocks.pop(0)
         else:

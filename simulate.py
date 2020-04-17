@@ -78,7 +78,7 @@ def main():
     index = range(len(erase_counts))
 
     fagc_axis.scatter(index, erase_counts, c='b', label='FaGC')
-    fagc_axis.set_ylim(bottom=0, top=200)
+    fagc_axis.set_ylim(bottom=0, top=500)
 
     # Plot
     plt.show()

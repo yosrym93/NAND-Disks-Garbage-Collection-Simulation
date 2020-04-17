@@ -13,6 +13,7 @@ class GarbageCollector(ABC):
             self.reallocate_block(victim_block, current_time)
             self.physical_disk.erase_block(victim_block)
             self.erase_operations_count += 1
+            print('\n',"Free blocks ",len(self.physical_disk.free_blocks))
 
     @abstractmethod
     def is_gc_needed(self):
