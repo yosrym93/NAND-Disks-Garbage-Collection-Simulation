@@ -43,12 +43,6 @@ class PhysicalBlock:
         block_age = current_time - block_last_update
         return block_age
 
-    def get_block_migration_cost(self, current_time, avg_erase_count, max_erase_count):
-        valid_pages_percentage = self.valid_pages_count / pages_per_block
-        if max_erase_count > 0:
-            block_age = self.get_block_age(current_time) * (1 - valid_pages_percentage)\
-                        / pow(1 + valid_pages_percentage, 2 - avg_erase_count / max_erase_count)
-        else:
-            block_age = self.get_block_age(current_time) * (1 - valid_pages_percentage)\
-                        / pow(1 + valid_pages_percentage, 1)
-        return block_age
+    def get_block_migration_cost(self, current_time):
+        block_migration_cost = self.get_block_age(current_time) * self.invalid_pages_count
+        return block_migration_cost

@@ -121,16 +121,12 @@ class PhysicalDisk:
         return average_updates, average_piu
 
     def get_min_migration_cost_block(self, current_time):
-        migration_costs = [block.get_block_migration_cost(current_time, self.avg_erase_count, self.max_erase_count)
+        migration_costs = [block.get_block_migration_cost(current_time)
                            for block in self.used_blocks]
 
-        cold_block_migration_cost = self.cold_active_block.get_block_migration_cost(
-            current_time, self.avg_erase_count, self.max_erase_count
-        )
+        cold_block_migration_cost = self.cold_active_block.get_block_migration_cost(current_time)
 
-        hot_block_migration_cost = self.hot_active_block.get_block_migration_cost(
-            current_time, self.avg_erase_count, self.max_erase_count
-        )
+        hot_block_migration_cost = self.hot_active_block.get_block_migration_cost(current_time)
 
         max_migration_cost = max(migration_costs)
         if cold_block_migration_cost > hot_block_migration_cost and cold_block_migration_cost > max_migration_cost:
